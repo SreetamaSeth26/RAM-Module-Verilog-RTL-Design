@@ -8,7 +8,6 @@ module tb;
 
   ram dut(clk, write_enable, enable, addr, data_in, data_out);
 
-  // Clock generation
   initial begin
     clk = 0;
     forever #5 clk = ~clk;
