@@ -27,6 +27,9 @@ A synchronous 16x8-bit RAM module written in Verilog, simulated on EDA Playgroun
 
 ---
 
+## Note
+Decimal notation is used for memory addresses (4'd5, 4'd7) for readability, while hexadecimal notation is used for data values (8'h50, 8'h66) since it is a compact representation of binary data.
+
 ## Simulation
 
 Simulated on [EDA Playground](https://edaplayground.com) using **Icarus Verilog**.
@@ -77,70 +80,11 @@ Then generate the SVG:
 netlistsvg ram.json -o ram.svg
 open ram.svg
 ```
+## Schematic
+
+The synthesized netlist was generated using **Yosys** and visualized using **netlistsvg**. The schematic confirms successful inference of the memory block and associated read/write control logic.
+
+
 
 ---
 
-## Moore FSM Sequence Detector (`1010`)
-
-A Moore FSM that detects the sequence `1010` on a serial input. The output goes high only when the complete sequence has been received.
-
-### State diagram
-
-| State | Meaning | Output |
-|---|---|---|
-| S0 | Idle / reset | 0 |
-| S1 | Received `1` | 0 |
-| S2 | Received `10` | 0 |
-| S3 | Received `101` | 0 |
-| S4 | Received `1010` | 1 |
-
-### Module interface
-
-| Signal | Direction | Description |
-|---|---|---|
-| `clk` | input | Clock |
-| `rst` | input | Synchronous reset |
-| `seq_in` | input | Serial input bit |
-| `detected` | output | High when `1010` is detected |
-
-### Simulation
-
-Simulated on EDA Playground with Icarus Verilog:
-
-```bash
-iverilog -Wall -g2012 moore.sv testbench.sv && vvp a.out
-```
-
-### Synthesis
-
-```bash
-cd ~/Desktop
-yosys
-```
-
-Inside Yosys:
-
-```
-read_verilog moore.v
-prep -top moore
-write_json moore.json
-exit
-```
-
-Generate the netlist diagram:
-
-```bash
-netlistsvg moore.json -o moore.svg
-open moore.svg
-```
-
----
-
-## Tools Used
-
-| Tool | Purpose |
-|---|---|
-| EDA Playground | Browser-based simulation environment |
-| Icarus Verilog (`iverilog`, `vvp`) | Compilation and simulation |
-| Yosys | Synthesis and JSON netlist export |
-| netlistsvg | Netlist SVG visualization |
