@@ -1,53 +1,37 @@
-# RAM Module – Verilog RTL Design
+# Synchronous RAM — Verilog RTL
 
-A simple synchronous-read, combinational-write RAM implemented in Verilog. The module supports 16 addressable locations, each 8 bits wide, controlled by separate write-enable and output-enable signals.
+A synchronous 16x8-bit RAM module written in Verilog, simulated on EDA Playground and synthesized using Yosys + netlistsvg.
 
 ---
 
 ## Module Overview
 
-**File:** `ram.v`
+**`ram.v`**
 
-| Parameter | Value |
-|-----------|-------|
-| Address width | 4 bits (16 locations) |
-| Data width | 8 bits |
-| Write trigger | Combinational (`always @(*)`) |
-| Read output | Continuous assignment |
+- 16 locations, each 8 bits wide
+- Address bus: 4 bits (`addr`)
+- Data bus: 8 bits (`data_in` / `data_out`)
+- All operations are synchronous to the rising edge of `clk`
 
-### Port Description
-
-| Port | Direction | Width | Description |
-|------|-----------|-------|-------------|
-| `write_enable` | input | 1 | High to enable write |
-| `enable` | input | 1 | High to enable read output |
+| Signal | Direction | Width | Description |
+|---|---|---|---|
+| `clk` | input | 1 | Clock |
+| `write_enable` | input | 1 | High to write |
+| `enable` | input | 1 | High to read |
 | `addr` | input | 4 | Memory address |
 | `data_in` | input | 8 | Data to write |
-| `data_out` | output | 8 | Data read from memory |
+| `data_out` | output | 8 | Data read out |
 
-### Behavior
+**Write condition:** `write_enable = 1`, `enable = 0`  
+**Read condition:** `enable = 1`, `write_enable = 0`
 
-- **Write:** When `write_enable = 1` and `enable = 0`, data is written to `mem[addr]`.
-- **Read:** When `write_enable = 0` and `enable = 1`, `data_out` reflects `mem[addr]`.
-- **Idle:** When neither condition is met, `data_out` is driven to high-impedance (`8'hzz`).
-
----
-
-## RTL Notes
-
-The `always @(*)` block with a memory array write will infer combinational logic. This means writes happen instantly without a clock edge, which works for behavioral simulation but is not typical of synthesizable RAM. For synthesis targeting real hardware, a clocked (`always @(posedge clk)`) write should be used instead.
-
-
-Decimal notation is used for memory addresses (`4'd5`, `4'd7`) for readability, while hexadecimal notation is used for data values (`8'h50`, `8'h66`) since it is a compact representation of binary data.
-
-8'hZZ (high impedance) was replaced with 8'h00 for schematic generation, as Yosys/Netlistsvg has limited support for tri-state logic. The original design behavior remains unchanged for the purposes of this demonstration.
 ---
 
 ## Simulation
 
-Simulated on [EDA Playground](https://edaplayground.com) using Icarus Verilog.
+Simulated on [EDA Playground](https://edaplayground.com) using **Icarus Verilog**.
 
-### Testbench Sequence
+### Testbench sequence
 
 1. Write `0x50` to address `5`
 2. Write `0x66` to address `7`
@@ -57,36 +41,106 @@ Simulated on [EDA Playground](https://edaplayground.com) using Icarus Verilog.
 ### Output
 
 ```
-Time :- 25 Address =  5 || Data = 50
-Time :- 40 Address =  7 || Data = 66
+Time :- 30 Address = 5 || Data = 50
+Time :- 40 Address = 7 || Data = 66
 ```
+
+Both reads return the correct values.
 
 ---
 
-## Synthesis and Netlist Visualization
+## Synthesis
 
-Synthesized using **Yosys** and visualized with **netlistsvg**.
+Synthesized using **Yosys**, with the netlist visualized as an SVG using **netlistsvg**.
 
 ### Steps
 
-```bash
-# Open Yosys
-yosys
+Open a terminal and run:
 
-# Inside Yosys
+```bash
+cd ~/Desktop
+yosys
+```
+
+Inside Yosys:
+
+```
 read_verilog ram.v
 prep -top ram
 write_json ram.json
 exit
+```
 
-# Generate SVG netlist
+Then generate the SVG:
+
+```bash
 netlistsvg ram.json -o ram.svg
-
-# View the diagram
 open ram.svg
 ```
 
-This produces a gate-level netlist diagram showing how the design is mapped after synthesis.
+---
+
+## Moore FSM Sequence Detector (`1010`)
+
+A Moore FSM that detects the sequence `1010` on a serial input. The output goes high only when the complete sequence has been received.
+
+### State diagram
+
+| State | Meaning | Output |
+|---|---|---|
+| S0 | Idle / reset | 0 |
+| S1 | Received `1` | 0 |
+| S2 | Received `10` | 0 |
+| S3 | Received `101` | 0 |
+| S4 | Received `1010` | 1 |
+
+### Module interface
+
+| Signal | Direction | Description |
+|---|---|---|
+| `clk` | input | Clock |
+| `rst` | input | Synchronous reset |
+| `seq_in` | input | Serial input bit |
+| `detected` | output | High when `1010` is detected |
+
+### Simulation
+
+Simulated on EDA Playground with Icarus Verilog:
+
+```bash
+iverilog -Wall -g2012 moore.sv testbench.sv && vvp a.out
+```
+
+### Synthesis
+
+```bash
+cd ~/Desktop
+yosys
+```
+
+Inside Yosys:
+
+```
+read_verilog moore.v
+prep -top moore
+write_json moore.json
+exit
+```
+
+Generate the netlist diagram:
+
+```bash
+netlistsvg moore.json -o moore.svg
+open moore.svg
+```
 
 ---
 
+## Tools Used
+
+| Tool | Purpose |
+|---|---|
+| EDA Playground | Browser-based simulation environment |
+| Icarus Verilog (`iverilog`, `vvp`) | Compilation and simulation |
+| Yosys | Synthesis and JSON netlist export |
+| netlistsvg | Netlist SVG visualization |
