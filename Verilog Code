@@ -1,0 +1,12 @@
+module ram(input write_enable,enable,input [3:0] addr, input [7:0] data_in,output [7:0] data_out);
+  
+  reg [7:0] mem [15:0];
+  
+  always@(*)
+    begin
+      if(write_enable && !enable)
+        mem[addr]=data_in;
+    end
+  
+  assign data_out = (!write_enable && enable)? mem[addr]:8'hzz;
+endmodule
