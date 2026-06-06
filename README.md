@@ -40,7 +40,7 @@ The `always @(*)` block with a memory array write will infer combinational logic
 
 Decimal notation is used for memory addresses (`4'd5`, `4'd7`) for readability, while hexadecimal notation is used for data values (`8'h50`, `8'h66`) since it is a compact representation of binary data.
 
-
+8'hZZ (high impedance) was replaced with 8'h00 for schematic generation, as Yosys/Netlistsvg has limited support for tri-state logic. The original design behavior remains unchanged for the purposes of this demonstration.
 ---
 
 ## Simulation
