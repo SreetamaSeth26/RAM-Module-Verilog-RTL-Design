@@ -1,44 +1,50 @@
 module tb;
+  reg clk;
   reg write_enable;
   reg enable;
   reg [3:0] addr;
   reg [7:0] data_in;
   wire [7:0] data_out;
-  
-  ram dut(write_enable,enable,addr,data_in,data_out);
-  
+
+  ram dut(clk, write_enable, enable, addr, data_in, data_out);
+
+  // Clock generation
+  initial begin
+    clk = 0;
+    forever #5 clk = ~clk;
+  end
+
   initial
     begin
       $dumpfile("dump.vcd");
       $dumpvars(0,tb);
-      
-      //Writing 50 to address 5
-      write_enable=1;
-      enable=0;
-      addr=4'd5;
-      data_in=8'h50;
-      
-      //Writing 66 to address 7
+
+      // Writing 50 to address 5
+      write_enable = 1;
+      enable = 0;
+      addr = 4'd5;
+      data_in = 8'h50;
+
+      // Writing 66 to address 7
       #10;
-      addr=4'd7;
-      data_in=8'h66;
-      
-      //Reding data from address 5
+      addr = 4'd7;
+      data_in = 8'h66;
+
+      // Reading data from address 5
       #10;
-      write_enable=0;
-      enable=1;
-      addr=4'd5;
-      #5 $display("Time :- %0t Address = %d || Data = %h", $time,addr,data_out);
-      
-      //Reding data from address 7
+      write_enable = 0;
+      enable = 1;
+      addr = 4'd5;
       #10;
-      addr=4'd7;
-      #5 $display("Time :- %0t Address = %d || Data = %h", $time,addr,data_out);
-      
+      $display("Time :- %0t Address = %0d || Data = %h",
+               $time, addr, data_out);
+
+      // Reading data from address 7
+      addr = 4'd7;
+      #10;
+      $display("Time :- %0t Address = %0d || Data = %h",
+               $time, addr, data_out);
+
       #10 $finish;
     end
 endmodule
-      
-      
-  
-  
